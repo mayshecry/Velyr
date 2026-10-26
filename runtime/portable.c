@@ -1,4 +1,4 @@
-/* Fallback hardware layer for architectures without a dedicated .S file. */
+
 #define _POSIX_C_SOURCE 200809L
 #include <stdint.h>
 #include <time.h>
@@ -10,5 +10,5 @@ uint64_t vy_asm_cycles(void) {
 }
 
 void vy_asm_pause(void) {
-    /* The portable fallback has no architecture-specific spin hint. */
+    /* Fallback. */
 }
