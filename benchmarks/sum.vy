@@ -1,4 +1,4 @@
-# Compile with: bin/velyr build benchmarks/sum.vy -o bin/sum-bench
+
 start {
     let n := 1_000_000_000
     var sum: i64 = 0
