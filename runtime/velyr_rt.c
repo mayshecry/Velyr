@@ -15,7 +15,6 @@ extern void vy_asm_pause(void);
 static char vy_stdout_buffer[64u * 1024u];
 
 void vy_runtime_init(void) {
-    /* A fixed userspace buffer prevents tiny writes from becoming syscalls. */
     (void)setvbuf(stdout, vy_stdout_buffer, _IOFBF, sizeof(vy_stdout_buffer));
 }
 
@@ -96,16 +95,6 @@ void vy_bench_report(vy_str label, int64_t iterations, int64_t elapsed_ns, int64
 bool vy_str_equal(vy_str a, vy_str b) {
     return a.len == b.len && (a.len == 0 || memcmp(a.data, b.data, a.len) == 0);
 }
-
-/* ---------------------------------------------------------------- *
- * stdin input helpers
- *
- * vy_read_line stores each line in its own slot of a small ring
- * buffer, so several lines can stay alive at once (str is a pointer +
- * length slice). Older lines are reused once the ring wraps, so keep
- * line counts low and consume values you intend to keep before reading
- * more than 16 lines. Values parsed into numbers are unaffected.
- * ---------------------------------------------------------------- */
 
 #define VY_LINE_SLOTS 16u
 #define VY_LINE_CAP 4096u
