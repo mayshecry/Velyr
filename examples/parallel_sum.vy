@@ -1,4 +1,3 @@
-# OpenMP-backed multicore loop with an explicit, race-free reduction.
 start {
     let count := 100_000_000
     var total: i64 = 0
