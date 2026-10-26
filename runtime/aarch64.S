@@ -1,4 +1,4 @@
-/* AArch64 generic timer and spin-loop hint. */
+
 .text
 .p2align 4
 .global vy_asm_cycles
