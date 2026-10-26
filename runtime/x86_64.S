@@ -1,8 +1,4 @@
-/*
- * Tiny x86-64 hardware layer. These operations are assembly because their
- * exact instruction ordering is the API; normal arithmetic and memory work
- * intentionally stays in optimizing C/libc.
- */
+
 .text
 .p2align 4
 .globl vy_asm_cycles
