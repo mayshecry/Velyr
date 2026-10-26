@@ -32,7 +32,6 @@ void vy_bench_report(vy_str label, int64_t iterations, int64_t elapsed_ns, int64
 
 bool vy_str_equal(vy_str a, vy_str b);
 
-/* stdin input helpers */
 vy_str vy_read_line(void);
 bool vy_is_number(vy_str s);
 double vy_parse_number(vy_str s);
