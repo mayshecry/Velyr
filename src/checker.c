@@ -212,6 +212,129 @@ static Type check_expr(Checker * c, Expr * e) {
         for (a = a -> next; a; a = a -> next) check_expr(c, a -> expr);
       return e -> type = TY_F64;
     }
+    if (!strcmp(n, "parse_int")) {
+      if (e -> as.call.argc != 1) type_error(c, e -> at, "parse_int() takes one str argument");
+      if (a && check_expr(c, a -> expr) != TY_STR) type_error(c, a -> expr -> at, "parse_int() requires a str");
+      if (a)
+        for (a = a -> next; a; a = a -> next) check_expr(c, a -> expr);
+      return e -> type = TY_I64;
+    }
+    if (!strcmp(n, "arg_count")) {
+      if (e -> as.call.argc) type_error(c, e -> at, "arg_count() takes no arguments");
+      for (; a; a = a -> next) check_expr(c, a -> expr);
+      return e -> type = TY_I64;
+    }
+    if (!strcmp(n, "arg")) {
+      if (e -> as.call.argc != 1) type_error(c, e -> at, "arg() takes one i64 argument");
+      if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "arg() requires i64");
+      if (a)
+        for (a = a -> next; a; a = a -> next) check_expr(c, a -> expr);
+      return e -> type = TY_STR;
+    }
+    if (!strcmp(n, "net_af_inet") || !strcmp(n, "net_af_inet6") || !strcmp(n, "net_sock_stream") || !strcmp(n, "net_sock_dgram") || !strcmp(n, "net_sock_raw") || !strcmp(n, "net_ipproto_icmp") || !strcmp(n, "net_ipproto_tcp") || !strcmp(n, "net_ipproto_udp") || !strcmp(n, "net_sol_socket") || !strcmp(n, "net_sndbuf")) {
+      if (e -> as.call.argc) type_error(c, e -> at, "this builtin takes no arguments");
+      for (; a; a = a -> next) check_expr(c, a -> expr);
+      return e -> type = TY_I64;
+    }
+    if (!strcmp(n, "net_socket")) {
+      if (e -> as.call.argc != 3) type_error(c, e -> at, "net_socket() expects: domain, type, protocol");
+      int index = 0;
+      for (; a; a = a -> next, index++) {
+        if (check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "net_socket() requires i64 arguments");
+      }
+      return e -> type = TY_I64;
+    }
+    if (!strcmp(n, "net_connect")) {
+      if (e -> as.call.argc != 3) type_error(c, e -> at, "net_connect() expects: fd, address, port");
+      if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "net_connect() argument 1 needs i64");
+      if (a) { a = a -> next; if (a && check_expr(c, a -> expr) != TY_STR) type_error(c, a -> expr -> at, "net_connect() argument 2 needs str"); }
+      if (a) { a = a -> next; if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "net_connect() argument 3 needs i64"); }
+      for (; a; a = a -> next) check_expr(c, a -> expr);
+      return e -> type = TY_BOOL;
+    }
+    if (!strcmp(n, "net_bind") || !strcmp(n, "net_listen")) {
+      if (e -> as.call.argc != 2) type_error(c, e -> at, "this builtin expects: fd, value");
+      if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "argument 1 needs i64");
+      if (a) { a = a -> next; if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "argument 2 needs i64"); }
+      for (; a; a = a -> next) check_expr(c, a -> expr);
+      return e -> type = TY_BOOL;
+    }
+    if (!strcmp(n, "net_accept")) {
+      if (e -> as.call.argc != 1) type_error(c, e -> at, "net_accept() expects: fd");
+      if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "net_accept() requires i64");
+      for (; a; a = a -> next) check_expr(c, a -> expr);
+      return e -> type = TY_I64;
+    }
+    if (!strcmp(n, "net_send") || !strcmp(n, "net_sendto")) {
+      if (e -> as.call.argc < 2) type_error(c, e -> at, "this builtin expects at least: fd, data");
+      if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "argument 1 needs i64");
+      if (a) { a = a -> next; if (a && check_expr(c, a -> expr) != TY_STR) type_error(c, a -> expr -> at, "argument 2 needs str"); }
+      if (a) { a = a -> next; if (a && check_expr(c, a -> expr) != TY_STR) type_error(c, a -> expr -> at, "argument 3 needs str"); }
+      if (a) { a = a -> next; if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "argument 4 needs i64"); }
+      for (; a; a = a -> next) check_expr(c, a -> expr);
+      return e -> type = TY_I64;
+    }
+    if (!strcmp(n, "net_recv") || !strcmp(n, "net_recvfrom")) {
+      if (e -> as.call.argc != 2) type_error(c, e -> at, "this builtin expects: fd, max_len");
+      if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "argument 1 needs i64");
+      if (a) { a = a -> next; if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "argument 2 needs i64"); }
+      for (; a; a = a -> next) check_expr(c, a -> expr);
+      return e -> type = TY_STR;
+    }
+    if (!strcmp(n, "net_close")) {
+      if (e -> as.call.argc != 1) type_error(c, e -> at, "net_close() expects: fd");
+      if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "net_close() requires i64");
+      for (; a; a = a -> next) check_expr(c, a -> expr);
+      return e -> type = TY_VOID;
+    }
+    if (!strcmp(n, "net_setblocking") || !strcmp(n, "net_settimeout")) {
+      if (e -> as.call.argc != 2) type_error(c, e -> at, "this builtin expects: fd, value");
+      if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "argument 1 needs i64");
+      if (a) { a = a -> next; if (a) { Type got = check_expr(c, a -> expr); if (got != TY_I64 && got != TY_BOOL) type_error(c, a -> expr -> at, "argument 2 needs i64 or bool"); } }
+      for (; a; a = a -> next) check_expr(c, a -> expr);
+      return e -> type = TY_VOID;
+    }
+    if (!strcmp(n, "net_setsockopt")) {
+      if (e -> as.call.argc != 4) type_error(c, e -> at, "net_setsockopt() expects: fd, level, optname, value");
+      int index = 0;
+      for (; a; a = a -> next, index++) {
+        if (check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "net_setsockopt() requires i64 arguments");
+      }
+      return e -> type = TY_BOOL;
+    }
+    if (!strcmp(n, "net_resolve")) {
+      if (e -> as.call.argc != 1) type_error(c, e -> at, "net_resolve() expects: host");
+      if (a && check_expr(c, a -> expr) != TY_STR) type_error(c, a -> expr -> at, "net_resolve() requires a str");
+      for (; a; a = a -> next) check_expr(c, a -> expr);
+      return e -> type = TY_STR;
+    }
+    if (!strcmp(n, "net_ping_once")) {
+      if (e -> as.call.argc != 3) type_error(c, e -> at, "net_ping_once() expects: host, timeout_ms, size");
+      if (a && check_expr(c, a -> expr) != TY_STR) type_error(c, a -> expr -> at, "argument 1 needs str");
+      if (a) { a = a -> next; if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "argument 2 needs i64"); }
+      if (a) { a = a -> next; if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "argument 3 needs i64"); }
+      for (; a; a = a -> next) check_expr(c, a -> expr);
+      return e -> type = TY_I64;
+    }
+    if (!strcmp(n, "net_ping_fd")) {
+      if (e -> as.call.argc != 4) type_error(c, e -> at, "net_ping_fd() expects: fd, address, port, size");
+      if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "argument 1 needs i64");
+      if (a) { a = a -> next; if (a && check_expr(c, a -> expr) != TY_STR) type_error(c, a -> expr -> at, "argument 2 needs str"); }
+      if (a) { a = a -> next; if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "argument 3 needs i64"); }
+      if (a) { a = a -> next; if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "argument 4 needs i64"); }
+      for (; a; a = a -> next) check_expr(c, a -> expr);
+      return e -> type = TY_I64;
+    }
+    if (!strcmp(n, "net_sendmmsg_batch")) {
+      if (e -> as.call.argc != 5) type_error(c, e -> at, "net_sendmmsg_batch() expects: fd, data, address, port, count");
+      if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "argument 1 needs i64");
+      if (a) { a = a -> next; if (a && check_expr(c, a -> expr) != TY_STR) type_error(c, a -> expr -> at, "argument 2 needs str"); }
+      if (a) { a = a -> next; if (a && check_expr(c, a -> expr) != TY_STR) type_error(c, a -> expr -> at, "argument 3 needs str"); }
+      if (a) { a = a -> next; if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "argument 4 needs i64"); }
+      if (a) { a = a -> next; if (a && check_expr(c, a -> expr) != TY_I64) type_error(c, a -> expr -> at, "argument 5 needs i64"); }
+      for (; a; a = a -> next) check_expr(c, a -> expr);
+      return e -> type = TY_I64;
+    }
     Task * t = find_task(c -> program, n);
     if (!t) {
       char m[160];
@@ -372,7 +495,7 @@ void check_program(Program * p, Diagnostics * d, Arena * a) {
         diagnostic(d, t -> at.line, t -> at.col, "name error", "duplicate task name");
         break;
       }
-    if (!strcmp(t -> name, "clock_ns") || !strcmp(t -> name, "clock_resolution_ns") || !strcmp(t -> name, "cycles") || !strcmp(t -> name, "cpu_count") || !strcmp(t -> name, "sqrt") || !strcmp(t -> name, "relax") || !strcmp(t -> name, "bench_report") || !strcmp(t -> name, "read_line") || !strcmp(t -> name, "eof") || !strcmp(t -> name, "is_number") || !strcmp(t -> name, "parse_number")) diagnostic(d, t -> at.line, t -> at.col, "name error", "task name is reserved for a builtin");
+    if (!strcmp(t -> name, "clock_ns") || !strcmp(t -> name, "clock_resolution_ns") || !strcmp(t -> name, "cycles") || !strcmp(t -> name, "cpu_count") || !strcmp(t -> name, "sqrt") || !strcmp(t -> name, "relax") || !strcmp(t -> name, "bench_report") || !strcmp(t -> name, "read_line") || !strcmp(t -> name, "eof") || !strcmp(t -> name, "is_number") || !strcmp(t -> name, "parse_number") || !strcmp(t -> name, "net_af_inet") || !strcmp(t -> name, "net_af_inet6") || !strcmp(t -> name, "net_sock_stream") || !strcmp(t -> name, "net_sock_dgram") || !strcmp(t -> name, "net_sock_raw") || !strcmp(t -> name, "net_ipproto_icmp") || !strcmp(t -> name, "net_ipproto_tcp") || !strcmp(t -> name, "net_ipproto_udp") || !strcmp(t -> name, "net_sol_socket") || !strcmp(t -> name, "net_sndbuf") || !strcmp(t -> name, "net_socket") || !strcmp(t -> name, "net_connect") || !strcmp(t -> name, "net_bind") || !strcmp(t -> name, "net_listen") || !strcmp(t -> name, "net_accept") || !strcmp(t -> name, "net_send") || !strcmp(t -> name, "net_recv") || !strcmp(t -> name, "net_sendto") || !strcmp(t -> name, "net_recvfrom") || !strcmp(t -> name, "net_close") || !strcmp(t -> name, "net_setblocking") || !strcmp(t -> name, "net_settimeout") || !strcmp(t -> name, "net_setsockopt") || !strcmp(t -> name, "net_resolve") || !strcmp(t -> name, "net_ping_once") || !strcmp(t -> name, "net_ping_fd") || !strcmp(t -> name, "arg_count") || !strcmp(t -> name, "arg") || !strcmp(t -> name, "parse_int") || !strcmp(t -> name, "parse_number")) diagnostic(d, t -> at.line, t -> at.col, "name error", "task name is reserved for a builtin");
   }
   Checker c = {
     p,

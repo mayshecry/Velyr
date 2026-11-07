@@ -144,6 +144,50 @@ String equality compares contents, not pointers. String concatenation and heap-o
 
 On x86-64, `cycles()` uses fenced `RDTSC` and `relax()` uses `PAUSE`. On AArch64 they use `CNTVCT_EL0` and `YIELD`. Counter frequency is architecture-dependent; use `clock_ns()` for portable elapsed time.
 
+## Networking built-ins
+
+| Built-in | Result |
+|---|---|
+| `net_af_inet()` | `i64` address family `AF_INET` |
+| `net_af_inet6()` | `i64` address family `AF_INET6` |
+| `net_sock_stream()` | `i64` socket type `SOCK_STREAM` |
+| `net_sock_dgram()` | `i64` socket type `SOCK_DGRAM` |
+| `net_sock_raw()` | `i64` socket type `SOCK_RAW` |
+| `net_ipproto_icmp()` | `i64` protocol `IPPROTO_ICMP` |
+| `net_ipproto_tcp()` | `i64` protocol `IPPROTO_TCP` |
+| `net_ipproto_udp()` | `i64` protocol `IPPROTO_UDP` |
+| `net_socket(domain, type, protocol)` | `i64` file descriptor |
+| `net_connect(fd, addr, port)` | `bool`, TCP connect to `str` address |
+| `net_bind(fd, port)` | `bool`, bind to any interface |
+| `net_listen(fd, backlog)` | `bool`, listen on a stream socket |
+| `net_accept(fd)` | `i64` accepted client fd, `-1` on error |
+| `net_send(fd, data)` | `i64` bytes sent, `-1` on error |
+| `net_recv(fd, max_len)` | `str` received data |
+| `net_sendto(fd, data, addr, port)` | `i64` bytes sent, `-1` on error |
+| `net_recvfrom(fd, max_len)` | `str` received datagram |
+| `net_close(fd)` | `void`, close the socket |
+| `net_setblocking(fd, blocking)` | `void`, toggle `O_NONBLOCK` |
+| `net_settimeout(fd, ms)` | `void`, set receive/send timeouts |
+| `net_setsockopt(fd, level, optname, value)` | `bool`, `setsockopt` with an `i64` value |
+| `net_resolve(host)` | `str` IPv4 address, empty on failure |
+| `net_ping_once(host, timeout_ms, size)` | `i64` ICMP round-trip nanoseconds, `-1` on timeout or error |
+| `net_ping_fd(fd, addr, port, size)` | `i64` ICMP round-trip nanoseconds on a persistent raw socket, `-1` on timeout or error (no per-call socket creation — lowest overhead) |
+| `net_sendmmsg_batch(fd, data, addr, port, count)` | `i64` packets sent via `sendmmsg()`, up to `count` datagrams per syscall |
+| `net_sol_socket()` | `i64` `SOL_SOCKET` constant |
+| `net_sndbuf()` | `i64` `SO_SNDBUF` constant |
+
+## Command-line arguments
+
+| Built-in | Result |
+|---|---|
+| `arg_count()` | `i64`, number of user arguments |
+| `arg(i)` | `str`, i-th user argument |
+| `parse_int(s)` | `i64`, parse string as integer |
+
+`net_ping_once` / `net_ping_fd` use a raw `ICMP` socket and require `CAP_NET_RAW`; without it every call returns `-1`.
+
+See `examples/hyper_ping.vy` for the hardware-close pinger: a single reused raw socket, zero inter-packet delay, `clock_ns()` timing, and min/worst/avg RTT with loss reporting.
+
 ## Comments
 
 Both forms are accepted:

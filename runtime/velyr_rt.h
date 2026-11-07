@@ -20,8 +20,11 @@ typedef struct {
 
 #define VY_STR_LIT(s) ((vy_str){(s), sizeof(s) - 1u})
 
-void vy_runtime_init(void);
+void vy_runtime_init(int argc, char **argv);
 void vy_runtime_shutdown(void);
+int64_t vy_arg_count(void);
+vy_str vy_arg(int64_t index);
+int64_t vy_parse_int(vy_str s);
 
 int64_t vy_clock_ns(void);
 int64_t vy_clock_resolution_ns(void);
@@ -36,6 +39,34 @@ vy_str vy_read_line(void);
 bool vy_is_number(vy_str s);
 double vy_parse_number(vy_str s);
 bool vy_eof(void);
+
+int64_t vy_net_af_inet(void);
+int64_t vy_net_af_inet6(void);
+int64_t vy_net_sock_stream(void);
+int64_t vy_net_sock_dgram(void);
+int64_t vy_net_sock_raw(void);
+int64_t vy_net_ipproto_icmp(void);
+int64_t vy_net_ipproto_tcp(void);
+int64_t vy_net_ipproto_udp(void);
+int64_t vy_net_sol_socket(void);
+int64_t vy_net_sndbuf(void);
+int64_t vy_net_socket(int64_t domain, int64_t type, int64_t protocol);
+bool vy_net_connect(int64_t fd, vy_str addr, int64_t port);
+bool vy_net_bind(int64_t fd, int64_t port);
+bool vy_net_listen(int64_t fd, int64_t backlog);
+int64_t vy_net_accept(int64_t fd);
+int64_t vy_net_send(int64_t fd, vy_str data);
+vy_str vy_net_recv(int64_t fd, int64_t max_len);
+int64_t vy_net_sendto(int64_t fd, vy_str data, vy_str addr, int64_t port);
+vy_str vy_net_recvfrom(int64_t fd, int64_t max_len);
+void vy_net_close(int64_t fd);
+int64_t vy_net_sendmmsg_batch(int64_t fd, vy_str data, vy_str addr, int64_t port, int64_t count);
+void vy_net_setblocking(int64_t fd, bool blocking);
+void vy_net_settimeout(int64_t fd, int64_t ms);
+bool vy_net_setsockopt(int64_t fd, int64_t level, int64_t optname, int64_t value);
+vy_str vy_net_resolve(vy_str host);
+int64_t vy_net_ping_once(vy_str host, int64_t timeout_ms, int64_t size);
+int64_t vy_net_ping_fd(int64_t fd, vy_str addr, int64_t port, int64_t size);
 
 void vy_out_lock(void);
 void vy_out_unlock(void);

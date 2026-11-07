@@ -139,6 +139,85 @@ Ordinary arithmetic stays in optimizer-friendly C, and memory movement stays wit
 
 Performance claims should be measured on a named machine and workload. [`benchmarks/sum.vy`](benchmarks/sum.vy) is a starting point — it reports hardware counter ticks rather than made-up universal numbers.
 
+## Networking
+
+Velyr exposes POSIX sockets directly, so programs can do real network I/O at native speed:
+
+| Built-in | Meaning |
+|---|---|
+| `net_af_inet()` / `net_af_inet6()` | address family constants |
+| `net_sock_stream()` / `net_sock_dgram()` / `net_sock_raw()` | socket type constants |
+| `net_ipproto_icmp()` / `net_ipproto_tcp()` / `net_ipproto_udp()` | protocol constants |
+| `net_socket(domain, type, protocol)` | socket → fd as `i64` |
+| `net_connect(fd, addr, port)` / `net_bind(fd, port)` / `net_listen(fd, backlog)` | TCP/UDP setup, returns `bool` |
+| `net_accept(fd)` | accept → client fd as `i64` |
+| `net_send(fd, data)` / `net_recv(fd, max_len)` | stream send/recv |
+| `net_sendto(fd, data, addr, port)` / `net_recvfrom(fd, max_len)` | datagram send/recv |
+| `net_close(fd)` | close a socket |
+| `net_setblocking(fd, bool)` / `net_settimeout(fd, ms)` | blocking mode and timeouts |
+| `net_setsockopt(fd, level, optname, value)` | socket options, returns `bool` |
+| `net_resolve(host)` | hostname → IPv4 `str` |
+| `net_ping_once(host, timeout_ms, size)` | ICMP echo round-trip in nanoseconds, or `-1` on timeout/error |
+| `net_ping_fd(fd, addr, port, size)` | ICMP echo on an already-open raw socket, round-trip nanoseconds, or `-1` (no socket creation per call — lowest overhead) |
+| `net_sendmmsg_batch(fd, data, addr, port, count)` | Send up to `count` UDP datagrams in a single `sendmmsg()` syscall; returns packets sent |
+| `net_sol_socket()` | `SOL_SOCKET` constant |
+| `net_sndbuf()` | `SO_SNDBUF` constant |
+
+## Command-line arguments
+
+| Built-in | Result |
+|---|---|
+| `arg_count()` | `i64`, number of arguments after the program name |
+| `arg(i)` | `str`, i-th argument (arg(0) is the first) |
+| `parse_int(s)` | `i64`, parse a string as an integer |
+
+Example — UDP flooder (`examples/hi.vy`):
+
+```velyr
+start {
+    when arg_count() >= 3 {
+        let ip := arg(0)
+        let port := parse_int(arg(1))
+        let duration_s := parse_int(arg(2))
+        flood(ip, port, duration_s)
+    } otherwise {
+        say "usage: hi IP PORT TIME"
+    }
+}
+```
+
+`net_ping_once` / `net_ping_fd` open a raw `ICMP` socket, so they require `CAP_NET_RAW` (typically root). Everything else works with ordinary user privileges.
+
+`examples/hyper_ping.vy` is the hardware-close pinger: one persistent raw socket, zero inter-packet delay, `clock_ns()` timing, min/worst/avg RTT and loss reporting. Give it an IP on stdin and it fires as fast as the kernel and NIC allow.
+
+```velyr
+start {
+    print "ip: "
+    let host := read_line()
+    ...
+    each i in 0 .. count {
+        sent += 1
+        let r := net_ping_fd(fd, host, 0, size)
+        ...
+    }
+}
+```
+
+Example:
+
+```velyr
+start {
+    let fd := net_socket(net_af_inet(), net_sock_stream(), net_ipproto_tcp())
+    when net_connect(fd, "127.0.0.1", 34567) {
+        say "sent:", net_send(fd, "ping")
+        say "got:", net_recv(fd, 256)
+        net_close(fd)
+    }
+}
+```
+
+`examples/pinger.vy` is a customizable raw-ICMP pinger: per-target count, timeout, payload size, and inter-packet interval, with min/worst/avg and loss reporting, compiled with `-O3 -march=native` and `clock_ns()` timing.
+
 ## Current scope and next milestones
 
 0.2 is intentionally a usable systems-language kernel, not yet a full replacement for C. The next high-value work is:

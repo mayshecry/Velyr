@@ -137,6 +137,36 @@ static void emit_expr(Gen * g, Expr * e) {
     else if (!strcmp(n, "eof")) fputs("vy_eof", g -> f);
     else if (!strcmp(n, "is_number")) fputs("vy_is_number", g -> f);
     else if (!strcmp(n, "parse_number")) fputs("vy_parse_number", g -> f);
+    else if (!strcmp(n, "parse_int")) fputs("vy_parse_int", g -> f);
+    else if (!strcmp(n, "arg_count")) fputs("vy_arg_count", g -> f);
+    else if (!strcmp(n, "arg")) fputs("vy_arg", g -> f);
+    else if (!strcmp(n, "net_af_inet")) fputs("vy_net_af_inet", g -> f);
+    else if (!strcmp(n, "net_af_inet6")) fputs("vy_net_af_inet6", g -> f);
+    else if (!strcmp(n, "net_sock_stream")) fputs("vy_net_sock_stream", g -> f);
+    else if (!strcmp(n, "net_sock_dgram")) fputs("vy_net_sock_dgram", g -> f);
+    else if (!strcmp(n, "net_sock_raw")) fputs("vy_net_sock_raw", g -> f);
+    else if (!strcmp(n, "net_ipproto_icmp")) fputs("vy_net_ipproto_icmp", g -> f);
+    else if (!strcmp(n, "net_ipproto_tcp")) fputs("vy_net_ipproto_tcp", g -> f);
+    else if (!strcmp(n, "net_ipproto_udp")) fputs("vy_net_ipproto_udp", g -> f);
+    else if (!strcmp(n, "net_sol_socket")) fputs("vy_net_sol_socket", g -> f);
+    else if (!strcmp(n, "net_sndbuf")) fputs("vy_net_sndbuf", g -> f);
+    else if (!strcmp(n, "net_socket")) fputs("vy_net_socket", g -> f);
+    else if (!strcmp(n, "net_connect")) fputs("vy_net_connect", g -> f);
+    else if (!strcmp(n, "net_bind")) fputs("vy_net_bind", g -> f);
+    else if (!strcmp(n, "net_listen")) fputs("vy_net_listen", g -> f);
+    else if (!strcmp(n, "net_accept")) fputs("vy_net_accept", g -> f);
+    else if (!strcmp(n, "net_send")) fputs("vy_net_send", g -> f);
+    else if (!strcmp(n, "net_recv")) fputs("vy_net_recv", g -> f);
+    else if (!strcmp(n, "net_sendto")) fputs("vy_net_sendto", g -> f);
+    else if (!strcmp(n, "net_recvfrom")) fputs("vy_net_recvfrom", g -> f);
+    else if (!strcmp(n, "net_close")) fputs("vy_net_close", g -> f);
+    else if (!strcmp(n, "net_setblocking")) fputs("vy_net_setblocking", g -> f);
+    else if (!strcmp(n, "net_settimeout")) fputs("vy_net_settimeout", g -> f);
+    else if (!strcmp(n, "net_setsockopt")) fputs("vy_net_setsockopt", g -> f);
+    else if (!strcmp(n, "net_resolve")) fputs("vy_net_resolve", g -> f);
+    else if (!strcmp(n, "net_ping_once")) fputs("vy_net_ping_once", g -> f);
+    else if (!strcmp(n, "net_ping_fd")) fputs("vy_net_ping_fd", g -> f);
+    else if (!strcmp(n, "net_sendmmsg_batch")) fputs("vy_net_sendmmsg_batch", g -> f);
     else fprintf(g -> f, "vy_fn_%s", n);
     fputc('(', g -> f);
     for (ExprList * a = e -> as.call.args; a; a = a -> next) {
@@ -335,7 +365,7 @@ bool generate_c(Program * p,
     emit_block( & g, t -> body);
     fputs("\n\n", f);
   }
-  fputs("int main(void) {\n    vy_runtime_init();\n", f);
+  fputs("int main(int argc, char **argv) {\n    vy_runtime_init(argc, argv);\n", f);
   g.indent = 1;
   for (Stmt * s = p -> start -> as.block.first; s; s = s -> next) emit_stmt( & g, s);
   fputs("    vy_runtime_shutdown();\n    return 0;\n}\n", f);
